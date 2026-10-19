@@ -1,0 +1,142 @@
+package com.ebuka.ecommerce.service.serviceImpl;
+import java.util.Locale;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import com.ebuka.ecommerce.model.User;
+import com.ebuka.ecommerce.repository.UserRepository;
+import com.ebuka.ecommerce.service.AuthService;
+import com.ebuka.ecommerce.service.JwtService;
+import com.ebuka.ecommerce.service.OtpService;
+
+public class AuthServiceImpl implements AuthService {
+
+    private final BCryptPasswordEncoder passwordEncoder =
+        new BCryptPasswordEncoder();
+
+     private static final Logger log =
+            LoggerFactory.getLogger(AuthServiceImpl.class);
+
+    private final JwtService jwtService;
+    private final OtpService otpService;
+    private final UserRepository userRepository;
+
+    public AuthServiceImpl(
+        JwtService jwtService, 
+        OtpService otpService, 
+        UserRepository userRepository
+    ){
+        this.jwtService = jwtService;
+        this.otpService = otpService;
+        this.userRepository = userRepository;
+    }
+
+     @Override
+    public void signup(String firstName, String lastName, String email, String password) {
+
+        String normalizedEmail =
+                email.trim().toLowerCase(Locale.ROOT);
+
+        String normalizedFirstName = firstName.trim();
+        String normalizedLastName = lastName.trim();
+
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "User already exist");
+        }
+
+        String passwordHash = passwordEncoder.encode(password);
+
+        User user = new User(
+                normalizedFirstName,
+                normalizedLastName,
+                normalizedEmail,
+                passwordHash
+        );
+
+        user.setVerified(false);
+
+        userRepository.save(user);
+
+        String otp = otpService.generateOtp(normalizedEmail);
+
+        // LOCAL DEVELOPMENT ONLY. Never log OTPs in production.
+        log.info("OTP for {} (development only): {}", normalizedEmail, otp);
+    }
+
+    @Override
+    public void resendOtp(String email) {
+
+        String normalizedEmail =
+                email.trim().toLowerCase(Locale.ROOT);
+
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
+
+        if (user.isVerified()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "This account is already verified");
+        }
+
+        String otp = otpService.generateOtp(normalizedEmail);
+
+        // LOCAL DEVELOPMENT ONLY.
+        log.info("OTP for {} (development only): {}", normalizedEmail, otp);
+    }
+
+    @Override
+    public void verifyOtp(String email, String otp) {
+
+        String normalizedEmail =
+                email.trim().toLowerCase(Locale.ROOT);
+
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or OTP"));
+
+        if (user.isVerified()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "This account is already verified");
+        }
+
+        otpService.verifyOtp(normalizedEmail, otp);
+
+        user.setVerified(true);
+
+        userRepository.save(user);
+    }
+
+    @Override
+    public String login(String email, String password) {
+
+        String normalizedEmail =
+                email.trim().toLowerCase(Locale.ROOT);
+
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                                "Invalid email or password"));
+
+        if (!user.isVerified()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Please verify your email before logging in");
+        }
+
+        if (!passwordEncoder.matches(
+                password, user.getPasswordHash())) {
+
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Invalid email or password");
+        }
+
+        return jwtService.generateToken(user.getEmail());
+    }
+
+
+}
