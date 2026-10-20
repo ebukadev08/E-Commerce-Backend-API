@@ -1,4 +1,6 @@
 package com.ebuka.ecommerce.model;
+import com.ebuka.ecommerce.enums.Role;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -33,7 +35,8 @@ public class User {
 
     public User(String firstName, String lastName, String email, String passwordHash) {
         this.firstName = firstName;
-        this.lastName = firstName;
+        this.lastName = lastName;
+        this.email = email;
         this.passwordHash = passwordHash;
         this.verified = false;
         this.role = Role.CUSTOMER;
