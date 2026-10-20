@@ -1,5 +1,6 @@
 package com.ebuka.ecommerce.service;
 
+
 public interface AuthService {
 
     void signup(String firstName, String lastName, String email, String password);
