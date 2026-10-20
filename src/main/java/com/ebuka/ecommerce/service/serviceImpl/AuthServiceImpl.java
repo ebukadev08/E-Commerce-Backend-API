@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
 
 import com.ebuka.ecommerce.model.User;
 import com.ebuka.ecommerce.repository.UserRepository;
@@ -14,6 +15,7 @@ import com.ebuka.ecommerce.service.AuthService;
 import com.ebuka.ecommerce.service.JwtService;
 import com.ebuka.ecommerce.service.OtpService;
 
+@Service 
 public class AuthServiceImpl implements AuthService {
 
     private final BCryptPasswordEncoder passwordEncoder =
@@ -37,7 +39,12 @@ public class AuthServiceImpl implements AuthService {
     }
 
      @Override
-    public void signup(String firstName, String lastName, String email, String password) {
+    public void signup(
+        String firstName, 
+        String lastName, 
+        String email, 
+        String password
+) {
 
         String normalizedEmail =
                 email.trim().toLowerCase(Locale.ROOT);
@@ -46,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
         String normalizedLastName = lastName.trim();
 
         if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "User already exist");
         }
 
