@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 
 
 public class SignupRequest {
+
     @NotBlank(message = "firstName is required")
     @Size(min = 2, message = "firstName must be at least 2 characters")
     private String firstName;
@@ -21,6 +22,7 @@ public class SignupRequest {
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
+
 
     public SignupRequest() {
     }
@@ -42,7 +44,7 @@ public class SignupRequest {
     }
 
     public String getLastName() {
-        return firstName;
+        return lastName;
     }
 
     public void setLastName(String lastName) {
