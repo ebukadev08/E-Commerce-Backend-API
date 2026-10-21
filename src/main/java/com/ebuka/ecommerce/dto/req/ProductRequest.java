@@ -4,11 +4,16 @@ package com.ebuka.ecommerce.dto.req;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 
 public class ProductRequest {
+
+    @NotNull (message = "Category ID is required")
+    @Positive(message = "Category ID must be greater than zero")
+    private Long categoryId;
 
     @NotBlank(message = "Product name is required")
     @Size(max = 150, message = "Product name cannot exceed 150 characters")
@@ -58,5 +63,13 @@ public class ProductRequest {
 
     public void setStockQuantity(Integer stockQuantity) {
         this.stockQuantity = stockQuantity;
+    }
+
+    public Long getCategoryId() {
+    return categoryId;
+}
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
     }
 }
