@@ -2,7 +2,9 @@
 package com.ebuka.ecommerce.service.serviceImpl;
 
 import com.ebuka.ecommerce.dto.req.ProductRequest;
+import com.ebuka.ecommerce.model.Category;
 import com.ebuka.ecommerce.model.Product;
+import com.ebuka.ecommerce.repository.CategoryRepository;
 import com.ebuka.ecommerce.repository.ProductRepository;
 import com.ebuka.ecommerce.service.ProductService;
 
@@ -16,9 +18,11 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ProductServiceImpl(ProductRepository productRepository) {
+    public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @Override
@@ -55,6 +59,7 @@ public class ProductServiceImpl implements ProductService {
         product.setPrice(request.getPrice());
         product.setStockQuantity(request.getStockQuantity());
 
+        product.setCategory(findCategoryById(request.getCategoryId()));
         return productRepository.save(product);
     }
 
@@ -63,4 +68,12 @@ public class ProductServiceImpl implements ProductService {
         Product product = getProductById(id);
         productRepository.delete(product);
     }
+
+    private Category findCategoryById(Long categoryId) {
+    return categoryRepository.findById(categoryId)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Category not found with id: " + categoryId
+            ));
+}
 }
