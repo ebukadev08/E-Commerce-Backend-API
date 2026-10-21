@@ -8,6 +8,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -74,7 +75,12 @@ public class SecurityConfig {
                     "/api/products",
                     "/api/products/**"
                 ).permitAll()
-
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/categories",
+                    "/api/categories/**"
+                ).permitAll()
+                .requestMatchers("/api/categories/**").hasRole("ADMIN")
                 .requestMatchers("/api/products/**").hasRole("ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/wallet/**").hasRole("CUSTOMER")
